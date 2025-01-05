@@ -288,6 +288,7 @@ footer nav ul {
 }
 .modal-content h2{
 	text-align: center;
+	margin-top: 40px;
 }
 .gallery-view{
 	/* margin: 20px 0; */
@@ -316,7 +317,8 @@ footer nav ul {
     right: 5px;
 }
 #add-photo{
-	margin: 0;
+	border: none;
+	margin: 20px 0;
 	padding: 10px;
 }
 .close-button {

@@ -30,7 +30,6 @@ function loadid(){
            filtrs.appendChild(button)
            button.addEventListener('click', (function(id) {
             return function() {
-                console.log(id);
                 getCategory(id);
             }
             })(categorie.id));
@@ -138,8 +137,9 @@ async function delet(id) {
         if(response.ok){
             let itemAtRemove = document.querySelector(`.contentWithDelet[data-id="${id}"]`);
             if(itemAtRemove){
-                itemAtRemove.remove()
-                messages('supprimé avec succès', 'success')
+                itemAtRemove.remove();
+                getCategory('Tous');
+                messages('supprimé avec succès', 'success');
             }
         }else{
             messages(`Une erreur s'est produite lors de la suppression`, 'error')
