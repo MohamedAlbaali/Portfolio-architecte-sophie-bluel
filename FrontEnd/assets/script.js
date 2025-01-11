@@ -1,6 +1,6 @@
 let btnmodifier = document.querySelector('.modifier');
 const edition = document.querySelector('.edition');
-let worksData = []
+let worksData = [];
 const authToken = localStorage.getItem('authToken');
 let url = 'http://localhost:5678/api/works';
 fetch(url)
@@ -9,7 +9,7 @@ fetch(url)
             throw new Error('Connection error');
         }
         return reponse.json();
-    }).then(works =>{
+    }).then(works => {
         worksData = works;
         getCategory('Tous');
     })
@@ -23,7 +23,6 @@ if (!authToken) {
     // loadid()
     logout()
 };
-
 
 function loadid() {
     fetch('http://localhost:5678/api/categories')
@@ -58,8 +57,7 @@ function loadid() {
 
 function getCategory(id) {
     document.querySelector('.gallery').innerHTML = '';
-    console.log(id)
-    console.log(worksData)
+
     for (let work of worksData) {
         if (id === 'Tous' || work.categoryId == id) {
             const figure = document.createElement('figure');
@@ -109,29 +107,29 @@ btnmodifier.addEventListener('click', function () {
     modal.style.display = 'flex';
     overlay.style.display = 'block';
     close(modal, 'close-modal');
-    fetch('http://localhost:5678/api/works')
-        .then((reponse) => {
-            if (!reponse.ok) {
-                throw new Error('Connection error');
-            };
-            return reponse.json();
-        }).then((works) => {
-            let gallery = document.getElementById('gallery-view');
-            for (work of works) {
-                let content = `
-            <div class="contentWithDelet" data-id="${work.id}">
-                <img src="${work.imageUrl}" alt="${work.title}">
-                <i onclick="delet(${work.id})" class="fa-solid fa-trash-can"></i>
-            </div>
-            `;
-                if (!gallery.dataset.loadid == true) {
-                    gallery.innerHTML += content;
-                }
-            }
-            gallery.dataset.loadid = true;
-        }).catch((error) => {
-            alert(error);
-        });
+    // fetch('http://localhost:5678/api/works')
+    //     .then((reponse) => {
+    //         if (!reponse.ok) {
+    //             throw new Error('Connection error');
+    //         };
+    //         return reponse.json();
+    //     }).then((works) => {
+    let gallery = document.getElementById('gallery-view');
+    for (let work of worksData) {
+        let content = `
+                    <div class="contentWithDelet" data-id="${work.id}">
+                        <img src="${work.imageUrl}" alt="${work.title}">
+                        <i onclick="delet(${work.id})" class="fa-solid fa-trash-can"></i>
+                    </div>
+                    `;
+        if (!gallery.dataset.loadid == true) {
+            gallery.innerHTML += content;
+        }
+    }
+    gallery.dataset.loadid = true;
+    // }).catch((error) => {
+    //     alert(error);
+    // });
     addNewPro()
 });
 
@@ -145,16 +143,13 @@ async function delet(id) {
             },
         });
         if (response.ok) {
-            // let itemAtRemove = document.querySelector(`.contentWithDelet[data-id="${id}"]`);
+            let itemAtRemove = document.querySelector(`.contentWithDelet[data-id="${id}"]`);
             worksData = worksData.filter(work => work.id !== id);
-            // تحديث العرض
-            getCategory('Tous');
-            messages('Supprimé avec succès', 'success');
-            // if (itemAtRemove) {
-            //     itemAtRemove.remove();
-            //     getCategory('Tous');
-            //     messages('supprimé avec succès', 'success');
-            // }
+            if (itemAtRemove) {
+                itemAtRemove.remove();
+                getCategory('Tous');
+                messages('supprimé avec succès', 'success');
+            }
         } else {
             messages(`Une erreur s'est produite lors de la suppression`, 'error')
         }
@@ -191,7 +186,7 @@ function addNewPro() {
         modal.style.display = 'none';
         close(ajoutermodalcontent, 'close-mod');
         retour();
-        category()
+        category();
     });
 }
 
@@ -237,6 +232,8 @@ function addPhoto() {
         };
     });
 };
+const refer = document.getElementById('refer');
+const icon = document.getElementById('icon');
 
 function setupPhotoUpload() {
     const remplacefileInput = document.getElementById('remplacefileInput');
@@ -248,21 +245,17 @@ function setupPhotoUpload() {
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    remplacefileInput.style.display = 'none';
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     const existingImage = photoContainer.querySelector('img');
-                    function clearContainer(container) {
-                        while (container.firstChild) {
-                            container.removeChild(container.firstChild);
-                        }
-                    }
-                    clearContainer(photoContainer);
                     if (existingImage) {
                         photoContainer.removeChild(existingImage);
+                        
                     }
-
-                    photoContainer.appendChild(img);
+                    photoContainer.insertBefore(img, refer)
+                    icon.style.display = 'none';
+                    remplacefileInput.style.display = 'none';
+                    refer.style.display = 'none';
                 };
 
                 reader.readAsDataURL(file);
@@ -286,11 +279,14 @@ async function category() {
         const response = await fetch('http://localhost:5678/api/categories')
         if (response.ok) {
             let categorys = await response.json()
-            for (cat of categorys) {
-                select.innerHTML += `
-                <option class='opt' id='${cat.id}'>${cat.name}</option>
-                `
-            };
+            if(select.value === ''){
+                for (cat of categorys) {
+                    select.innerHTML += `
+                    <option class='opt' id='${cat.id}'>${cat.name}</option>
+                    `
+                };
+            }
+            
         } else {
             throw error;
         }
@@ -302,7 +298,7 @@ async function category() {
 
 // Soumettre un nouveau projet
 const titreInput = document.getElementById('titre');
-const fileInput = document.getElementById('fileInput');
+let fileInput = document.getElementById('fileInput');
 const select = document.getElementById('select');
 const btn = document.querySelector('.btn-valider');
 
@@ -330,8 +326,8 @@ function Soumettre() {
             alert('Tous les éléments sont obligatoires');
             return;
         }
-        const titre = titreInput.value.trim();
-        const selectedOption = select.options[select.selectedIndex];
+        let titre = titreInput.value.trim();
+        let selectedOption = select.options[select.selectedIndex];
         const categoryId = selectedOption.id;
 
         const data = new FormData();
@@ -349,19 +345,44 @@ function Soumettre() {
                 body: data,
             });
             if (response.ok) {
-                const result = await response.json();
-                worksData.push(result);
-                console.log(result);
+                const newWork = await response.json();
+                worksData.push(newWork);
+                //console.log(result);
+                
                 document.getElementById('ajoutermodalcontent').style.display = 'none';
                 document.getElementById('overlay').style.display = 'none';
-                // alert('Projet ajouté avec succès');
                 let main = document.querySelector('main');
-                main.classList.add('blur')
+                main.classList.add('blur');
                 setTimeout(() => {
                     main.classList.remove('blur');
                 }, 3000);
                 messages('Projet ajouté avec succès', 'success')
                 getCategory('Tous');
+
+                const gallery = document.getElementById('gallery-view');
+                gallery.innerHTML = ''; 
+                worksData.forEach(work => {
+                    let content = `
+                        <div class="contentWithDelet" data-id="${work.id}">
+                            <img src="${work.imageUrl}" alt="${work.title}">
+                            <i onclick="delet(${work.id})" class="fa-solid fa-trash-can"></i>
+                        </div>
+                    `;
+                    gallery.innerHTML += content;
+                });
+                titreInput.value = '';
+                select.selectedIndex = 0;
+
+                let remplacefileInput = document.getElementById('remplacefileInput');
+                let photo = document.querySelector('#photoContainer img');
+                const per = photo.parentNode;
+                per.replaceChild(remplacefileInput, photo);
+
+                icon.style.display = 'block';
+                remplacefileInput.style.display = 'block';
+                refer.style.display = 'block';
+                
+                
             } else {
                 const error = await response.json();
                 alert(`Erreur: ${error.message || 'Un problème est survenu'}`);
@@ -373,3 +394,4 @@ function Soumettre() {
     });
 }
 Soumettre()
+

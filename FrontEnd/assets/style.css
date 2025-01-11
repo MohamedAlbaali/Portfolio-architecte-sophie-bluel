@@ -409,7 +409,7 @@ footer nav ul {
 }
 .ajout-photo img{
 	width: 129px;
-	height: 193px;
+	height: 100%;
 	object-fit: cover;
 }
 #fileInput{
