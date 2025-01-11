@@ -2,8 +2,9 @@ let btnmodifier = document.querySelector('.modifier');
 const edition = document.querySelector('.edition');
 let worksData = [];
 const authToken = localStorage.getItem('authToken');
-let url = 'http://localhost:5678/api/works';
-fetch(url)
+let api = 'http://localhost:5678/api/';
+const defaultCategory = 'Tous'
+fetch(`${api}works`)
     .then((reponse) => {
         if (!reponse.ok) {
             throw new Error('Connection error');
@@ -11,51 +12,76 @@ fetch(url)
         return reponse.json();
     }).then(works => {
         worksData = works;
-        getCategory('Tous');
+        getWorks(defaultCategory);
+        if (!authToken) {
+            repalcgetFiltersButtons()
+            btnmodifier.style.display = 'none';
+            edition.style.display = 'none';
+        } else {
+            logout()
+        };
     })
 
-if (!authToken) {
-    // location.href = 'login.html';
-    loadid()
-    btnmodifier.style.display = 'none';
-    edition.style.display = 'none';
-} else {
-    // loadid()
-    logout()
-};
 
-function loadid() {
-    fetch('http://localhost:5678/api/categories')
-        .then(reponse => {
-            if (!reponse.ok) {
-                throw new Error('Connection error');
-            }
-            return reponse.json();
-        }).then((categories) => {
-            const filtrs = document.getElementById('filters');
-            const tous = document.createElement('button');
-            tous.type = "button";
-            tous.textContent = "Tous";
-            filtrs.appendChild(tous);
-            tous.addEventListener('click', () => {
-                getCategory('Tous');
-            })
-            for (let categorie of categories) {
-                let button = document.createElement("button");
-                button.textContent = categorie.name;
-                button.type = "button";
-                filtrs.appendChild(button)
-                button.addEventListener('click', (function () {
-                    getCategory(categorie.id);
-                })
-                );
-            }
-        }).catch((error) => {
-            alert(error);
-        });
+// Afficher les boutons de filtrage en fonction des données récupérées à partir d'Abi Direct
+// function getFiltersButtons() {
+//     fetch(`${api}categories`)
+//         .then(reponse => {
+//             if (!reponse.ok) {
+//                 throw new Error('Connection error');
+//             }
+//             return reponse.json();
+//         }).then((categories) => {
+//             const filtrs = document.getElementById('filters');
+//             const tous = document.createElement('button');
+//             tous.type = "button";
+//             tous.textContent = "Tous";
+//             filtrs.appendChild(tous);
+//             tous.addEventListener('click', () => {
+//                 getWorks(defaultCategory);
+//             })
+//             for (let categorie of categories) {
+//                 let button = document.createElement("button");
+//                 button.textContent = categorie.name;
+//                 button.type = "button";
+//                 filtrs.appendChild(button)
+//                 button.addEventListener('click', (function () {
+//                     getWorks(categorie.id);
+//                 })
+//                 );
+//             }
+//         }).catch((error) => {
+//             alert(error);
+//         });
+// }
+
+// Afficher les boutons de filtrage en fonction des données récupérées à partir du tableau ****worksData****
+function repalcgetFiltersButtons() {
+    const uniqueCategories = [...new Map(worksData.map(
+        work => [work.categoryId, { id: work.categoryId, name: work.category.name }]))
+    .values()];
+
+    const filtrs = document.getElementById('filters');
+    const tous = document.createElement('button');
+    tous.type = "button";
+    tous.textContent = "Tous";
+    filtrs.appendChild(tous);
+    tous.addEventListener('click', () => {
+        getWorks(defaultCategory);
+    })
+    for (const category of uniqueCategories) {
+        let button = document.createElement("button");
+        button.textContent = category.name;
+        button.type = "button";
+        filtrs.appendChild(button)
+        button.addEventListener('click', (function () {
+            getWorks(category.id);
+        })
+        );
+    }
 }
 
-function getCategory(id) {
+function getWorks(id) {
     document.querySelector('.gallery').innerHTML = '';
 
     for (let work of worksData) {
@@ -66,7 +92,7 @@ function getCategory(id) {
 
             img.src = work.imageUrl;
             img.alt = work.title;
-            caption.textContent = work.title + work.categoryId;
+            caption.textContent = work.title;
 
             figure.appendChild(img);
             figure.appendChild(caption);
@@ -100,20 +126,14 @@ function close(mod, clo) {
         }
     });
 };
+let modal = document.getElementById('modal');
+let overlay = document.getElementById('overlay');
+let ajoutermodalcontent = document.getElementById('ajoutermodalcontent');
 
 btnmodifier.addEventListener('click', function () {
-    let modal = document.getElementById('modal');
-    let overlay = document.getElementById('overlay');
     modal.style.display = 'flex';
     overlay.style.display = 'block';
     close(modal, 'close-modal');
-    // fetch('http://localhost:5678/api/works')
-    //     .then((reponse) => {
-    //         if (!reponse.ok) {
-    //             throw new Error('Connection error');
-    //         };
-    //         return reponse.json();
-    //     }).then((works) => {
     let gallery = document.getElementById('gallery-view');
     for (let work of worksData) {
         let content = `
@@ -127,16 +147,13 @@ btnmodifier.addEventListener('click', function () {
         }
     }
     gallery.dataset.loadid = true;
-    // }).catch((error) => {
-    //     alert(error);
-    // });
     addNewPro()
 });
 
 
 async function delet(id) {
     try {
-        const response = await fetch(`http://localhost:5678/api/works/${id}`, {
+        const response = await fetch(`${api}works/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -147,7 +164,7 @@ async function delet(id) {
             worksData = worksData.filter(work => work.id !== id);
             if (itemAtRemove) {
                 itemAtRemove.remove();
-                getCategory('Tous');
+                getWorks(defaultCategory);
                 messages('supprimé avec succès', 'success');
             }
         } else {
@@ -180,9 +197,7 @@ function messages(text, type) {
 function addNewPro() {
     let addPhoto = document.getElementById('add-photo');
     addPhoto.addEventListener('click', () => {
-        let ajoutermodalcontent = document.getElementById('ajoutermodalcontent');
         ajoutermodalcontent.style.display = 'flex';
-        let modal = document.getElementById('modal');
         modal.style.display = 'none';
         close(ajoutermodalcontent, 'close-mod');
         retour();
@@ -190,21 +205,22 @@ function addNewPro() {
     });
 }
 
-
 function retour() {
     let retour = document.getElementById('retour');
     retour.addEventListener('click', () => {
         ajoutermodalcontent.style.display = 'none';
         modal.style.display = 'flex';
-
     });
 }
 
-function addPhoto() {
-    let remplacefileInput = document.getElementById('remplacefileInput');
-    let fileInput = document.getElementById('fileInput');
-    let photoContainer = document.getElementById('photoContainer');
+const refer = document.getElementById('refer');
+const icon = document.getElementById('icon');
+const remplacefileInput = document.getElementById('remplacefileInput');
+const fileInput = document.getElementById('fileInput');
+const photoContainer = document.getElementById('photoContainer');
+const errorDiv = document.getElementById('error');
 
+function addPhoto() {
     if (remplacefileInput && fileInput) {
         remplacefileInput.addEventListener('click', () => {
             fileInput.click();
@@ -232,13 +248,8 @@ function addPhoto() {
         };
     });
 };
-const refer = document.getElementById('refer');
-const icon = document.getElementById('icon');
 
 function setupPhotoUpload() {
-    const remplacefileInput = document.getElementById('remplacefileInput');
-    const fileInput = document.getElementById('fileInput');
-    const photoContainer = document.getElementById('photoContainer');
     fileInput.addEventListener('change', () => {
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
@@ -250,12 +261,12 @@ function setupPhotoUpload() {
                     const existingImage = photoContainer.querySelector('img');
                     if (existingImage) {
                         photoContainer.removeChild(existingImage);
-                        
                     }
                     photoContainer.insertBefore(img, refer)
                     icon.style.display = 'none';
                     remplacefileInput.style.display = 'none';
                     refer.style.display = 'none';
+                    errorDiv.style.display = 'none';
                 };
 
                 reader.readAsDataURL(file);
@@ -266,12 +277,6 @@ function setupPhotoUpload() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    addPhoto();
-    setupPhotoUpload();
-});
-
-
 // Afficher les catégories en ajoutant une nouvelle image
 async function category() {
     let select = document.getElementById('select');
@@ -279,14 +284,14 @@ async function category() {
         const response = await fetch('http://localhost:5678/api/categories')
         if (response.ok) {
             let categorys = await response.json()
-            if(select.value === ''){
+            if (select.value === '') {
                 for (cat of categorys) {
                     select.innerHTML += `
                     <option class='opt' id='${cat.id}'>${cat.name}</option>
                     `
                 };
             }
-            
+
         } else {
             throw error;
         }
@@ -295,10 +300,8 @@ async function category() {
     }
 }
 
-
 // Soumettre un nouveau projet
 const titreInput = document.getElementById('titre');
-let fileInput = document.getElementById('fileInput');
 const select = document.getElementById('select');
 const btn = document.querySelector('.btn-valider');
 
@@ -318,7 +321,6 @@ titreInput.addEventListener('input', checkInput);
 fileInput.addEventListener('change', checkInput);
 select.addEventListener('change', checkInput);
 
-
 function Soumettre() {
 
     btn.addEventListener('click', async () => {
@@ -336,7 +338,7 @@ function Soumettre() {
         data.append('category', categoryId)
 
         try {
-            const response = await fetch('http://localhost:5678/api/works', {
+            const response = await fetch(`${api}works`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -347,20 +349,18 @@ function Soumettre() {
             if (response.ok) {
                 const newWork = await response.json();
                 worksData.push(newWork);
-                //console.log(result);
-                
-                document.getElementById('ajoutermodalcontent').style.display = 'none';
-                document.getElementById('overlay').style.display = 'none';
+                ajoutermodalcontent.style.display = 'none';
+                overlay.style.display = 'none';
                 let main = document.querySelector('main');
                 main.classList.add('blur');
                 setTimeout(() => {
                     main.classList.remove('blur');
                 }, 3000);
                 messages('Projet ajouté avec succès', 'success')
-                getCategory('Tous');
+                getWorks(defaultCategory);
 
                 const gallery = document.getElementById('gallery-view');
-                gallery.innerHTML = ''; 
+                gallery.innerHTML = '';
                 worksData.forEach(work => {
                     let content = `
                         <div class="contentWithDelet" data-id="${work.id}">
@@ -373,7 +373,6 @@ function Soumettre() {
                 titreInput.value = '';
                 select.selectedIndex = 0;
 
-                let remplacefileInput = document.getElementById('remplacefileInput');
                 let photo = document.querySelector('#photoContainer img');
                 const per = photo.parentNode;
                 per.replaceChild(remplacefileInput, photo);
@@ -381,8 +380,6 @@ function Soumettre() {
                 icon.style.display = 'block';
                 remplacefileInput.style.display = 'block';
                 refer.style.display = 'block';
-                
-                
             } else {
                 const error = await response.json();
                 alert(`Erreur: ${error.message || 'Un problème est survenu'}`);
@@ -393,5 +390,10 @@ function Soumettre() {
         };
     });
 }
-Soumettre()
 
+
+document.addEventListener('DOMContentLoaded', function () {
+    addPhoto();
+    setupPhotoUpload();
+    Soumettre()
+});
