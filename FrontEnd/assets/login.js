@@ -21,7 +21,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             localStorage.setItem('authToken', data.token);
             location.href = 'index.html';
         }else{
-            document.getElementById('error-message').style.display = 'block';
+            let erMessage = document.getElementById('error-message');
+            erMessage.style.display = 'block';
+            setTimeout(() => {
+                erMessage.style.display = 'none';
+            }, 2000);
         }
     }catch(error){
         console.error('Error during login:', error);

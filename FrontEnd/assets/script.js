@@ -322,7 +322,6 @@ fileInput.addEventListener('change', checkInput);
 select.addEventListener('change', checkInput);
 
 function Soumettre() {
-
     btn.addEventListener('click', async () => {
         if (!titreInput || !fileInput.files[0] || !select.selectedIndex === -1) {
             alert('Tous les éléments sont obligatoires');
