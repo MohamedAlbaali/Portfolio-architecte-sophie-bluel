@@ -48,10 +48,13 @@ table {
 }
 /** end reset css**/
 body {
-	max-width: 1140px;
-	margin:auto;
 	font-family: 'Work Sans' ;
 	font-size: 14px;
+	margin: 0;
+}
+.main-container{
+	max-width: 1440px;
+	margin: auto;
 }
 header {
 	display: flex;
@@ -209,9 +212,9 @@ footer nav ul {
 /* edition */
 .edition{
 	background-color: #000000;
-	width: calc(100% + 400px);
+	width: 100%;
 	height: 60px;
-	margin: 0 -190px;
+	margin: 0;
 	color: #fff;
 	display: flex;
 	align-items: center;
@@ -343,6 +346,7 @@ footer nav ul {
     position: absolute;
     top: 35px;
     right: 5px;
+	cursor: grabbing;
 }
 #add-photo{
 	border: none;
@@ -353,6 +357,9 @@ footer nav ul {
     float: right;
     font-size: 24px;
     cursor: pointer;
+}
+.close-button:hover{
+	color: red;
 }
  /* messages */
  .temporary-message {
@@ -388,13 +395,17 @@ footer nav ul {
 
 
 /* ajouter-modal */
+#retour:hover{
+	cursor: pointer;
+	color: #1D6154;
+}
 .ajouter-modal-content{
 	display: none;
 	flex-direction: column;
 	width: 630px;
 	padding: 20px;
 	position: fixed;
-	top: 40px;
+	top: 15px;
     left: 450px;
 	background-color: #fff;
 	z-index: 1000;
@@ -435,7 +446,8 @@ footer nav ul {
 	border-radius: 50px;
 	width: 173px;
 	height: 36px;
-	color: #306685;	
+	color: #306685;
+	cursor: pointer;
 }
 .ajout-photo p{
 	font-size: 10px;

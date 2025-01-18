@@ -3,7 +3,7 @@ const edition = document.querySelector('.edition');
 let worksData = [];
 const authToken = localStorage.getItem('authToken');
 let api = 'http://localhost:5678/api/';
-const defaultCategory = 'Tous'
+const defaultCategory = 'Tous';
 fetch(`${api}works`)
     .then((reponse) => {
         if (!reponse.ok) {
@@ -20,7 +20,7 @@ fetch(`${api}works`)
         } else {
             logout()
         };
-    })
+    }).catch(error => console.error(error));
 
 
 // Afficher les boutons de filtrage en fonction des données récupérées à partir d'Abi Direct
@@ -129,27 +129,37 @@ function close(mod, clo) {
 let modal = document.getElementById('modal');
 let overlay = document.getElementById('overlay');
 let ajoutermodalcontent = document.getElementById('ajoutermodalcontent');
+let gallery = document.getElementById('gallery-view');
 
-btnmodifier.addEventListener('click', function () {
-    modal.style.display = 'flex';
-    overlay.style.display = 'block';
-    close(modal, 'close-modal');
-    let gallery = document.getElementById('gallery-view');
+function forloopWorksData(){
+    gallery.innerHTML ='';
     for (let work of worksData) {
         let content = `
                     <div class="contentWithDelet" data-id="${work.id}">
                         <img src="${work.imageUrl}" alt="${work.title}">
-                        <i onclick="delet(${work.id})" class="fa-solid fa-trash-can"></i>
+                        <i data-id="${work.id}" class="fa-solid fa-trash-can"></i>
                     </div>
                     `;
-        if (!gallery.dataset.loadid == true) {
-            gallery.innerHTML += content;
-        }
+        gallery.innerHTML += content;
     }
+}
+btnmodifier.addEventListener('click', function () {
+    modal.style.display = 'flex';
+    overlay.style.display = 'block';
+    close(modal, 'close-modal');
+    forloopWorksData();
+    let deletIcons = document.querySelectorAll('i');
+    deletIcons.forEach((deletIcon)=>{
+        deletIcon.addEventListener('click', (event)=>{
+            let id = parseInt(event.target.getAttribute('data-id'), 10);
+            delet(id);
+            worksData = worksData.filter(work => work.id !== id);
+
+        });
+    });
     gallery.dataset.loadid = true;
     addNewPro()
 });
-
 
 async function delet(id) {
     try {
@@ -162,6 +172,7 @@ async function delet(id) {
         if (response.ok) {
             let itemAtRemove = document.querySelector(`.contentWithDelet[data-id="${id}"]`);
             worksData = worksData.filter(work => work.id !== id);
+            getWorks(defaultCategory);
             if (itemAtRemove) {
                 itemAtRemove.remove();
                 getWorks(defaultCategory);
@@ -357,18 +368,7 @@ function Soumettre() {
                 }, 3000);
                 messages('Projet ajouté avec succès', 'success')
                 getWorks(defaultCategory);
-
-                const gallery = document.getElementById('gallery-view');
-                gallery.innerHTML = '';
-                worksData.forEach(work => {
-                    let content = `
-                        <div class="contentWithDelet" data-id="${work.id}">
-                            <img src="${work.imageUrl}" alt="${work.title}">
-                            <i onclick="delet(${work.id})" class="fa-solid fa-trash-can"></i>
-                        </div>
-                    `;
-                    gallery.innerHTML += content;
-                });
+                forloopWorksData();
                 titreInput.value = '';
                 select.selectedIndex = 0;
 
